@@ -249,6 +249,15 @@ class UCP
 
 int main(int argc, char **argv)
 {
+
+    // Default values
+    int N = 100000000;
+
+    if (argc > 1)
+    {
+        N = std::atoi(argv[1]); // Convert first argument
+    }
+
     // Initialize MPI
     MPI_Init(&argc, &argv);
 
@@ -270,9 +279,7 @@ int main(int argc, char **argv)
 
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    int TASK_NUM = 100000000;
-
-    UCP ucp(TASK_NUM);
+    UCP ucp(N);
     ucp.mpiInit();
 
     double *C = ucp.C_;
