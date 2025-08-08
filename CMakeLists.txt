@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(UCP LANGUAGES CXX)
+project(UCP LANGUAGES CXX CUDA)
 
 # === Try to find CUDA ===
 include(CheckLanguage)
