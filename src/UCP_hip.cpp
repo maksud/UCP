@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 #include <cstdio>
 #include <hipcub/hipcub.hpp>
 #include <hip/hip_runtime.h>
@@ -431,16 +430,16 @@ int main()
     sum_scan_blelloch(d_output, d_input, (N + 1));
 #endif
 
-    hipDeviceSynchronize();
+    // hipDeviceSynchronize();
     // 4. Record the stop event
     hipEventRecord(stop);
     // 5. Wait for the event to complete
     hipEventSynchronize(stop);
 
     // 6. Calculate elapsed time
-    float milliseconds = 0;
-    hipEventElapsedTime(&milliseconds, start, stop);
-    printf("Kernel execution time: %.3f ms\n", milliseconds);
+    float milliseconds1 = 0;
+    hipEventElapsedTime(&milliseconds1, start, stop);
+    printf("Kernel 1 execution time: %.3f ms\n", milliseconds1);
 
     CUDA_CHECK(hipMemcpy(res, d_output, (N + 1) * sizeof(SumDataType), hipMemcpyDeviceToHost));
 
@@ -472,9 +471,11 @@ int main()
     hipEventSynchronize(stop);
 
     // 6. Calculate elapsed time
-    milliseconds = 0;
-    hipEventElapsedTime(&milliseconds, start, stop);
-    printf("Kernel execution time: %.3f ms\n", milliseconds);
+    float milliseconds2 = 0;
+    hipEventElapsedTime(&milliseconds2, start, stop);
+    printf("Kernel 2 execution time: %.3f ms\n", milliseconds2);
+
+    printf("Total execution time: %.5f ms\n", milliseconds1 + milliseconds2);
 
     CUDA_CHECK(hipMemcpy(boundaries, d_boundaries, (2 * P) * sizeof(BoundaryMessage), hipMemcpyDeviceToHost));
 

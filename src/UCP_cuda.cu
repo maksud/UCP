@@ -430,16 +430,16 @@ int main()
     sum_scan_blelloch(d_output, d_input, (N + 1));
 #endif
 
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
     // 4. Record the stop event
     cudaEventRecord(stop);
     // 5. Wait for the event to complete
     cudaEventSynchronize(stop);
 
     // 6. Calculate elapsed time
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("Kernel execution time: %.3f ms\n", milliseconds);
+    float milliseconds1 = 0;
+    cudaEventElapsedTime(&milliseconds1, start, stop);
+    printf("Kernel 1 execution time: %.3f ms\n", milliseconds1);
 
     CUDA_CHECK(cudaMemcpy(res, d_output, (N + 1) * sizeof(SumDataType), cudaMemcpyDeviceToHost));
 
@@ -471,9 +471,11 @@ int main()
     cudaEventSynchronize(stop);
 
     // 6. Calculate elapsed time
-    milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("Kernel execution time: %.3f ms\n", milliseconds);
+    float milliseconds2 = 0;
+    cudaEventElapsedTime(&milliseconds2, start, stop);
+    printf("Kernel 2 execution time: %.3f ms\n", milliseconds2);
+
+    printf("Total execution time: %.5f ms\n", milliseconds1 + milliseconds2);
 
     CUDA_CHECK(cudaMemcpy(boundaries, d_boundaries, (2 * P) * sizeof(BoundaryMessage), cudaMemcpyDeviceToHost));
 
