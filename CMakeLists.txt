@@ -20,7 +20,7 @@ if(CMAKE_CUDA_COMPILER)
         CUDA_SEPARABLE_COMPILATION ON
         CXX_STANDARD 14
         CUDA_STANDARD 14)
-    target_compile_options(${PROJECT_NAME}_cuda PRIVATE -O2)
+    target_compile_options(${PROJECT_NAME}_cuda PRIVATE -O3)
 
 # === HIP build ===
 elseif(HIP_FOUND)
@@ -33,7 +33,7 @@ elseif(HIP_FOUND)
     add_executable(${PROJECT_NAME}_hip src/UCP_hip.cpp)
     target_include_directories(${PROJECT_NAME}_hip PRIVATE ${HIP_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME}_hip PRIVATE ${HIP_LIBRARIES})
-    target_compile_options(${PROJECT_NAME}_hip PRIVATE -O2)
+    target_compile_options(${PROJECT_NAME}_hip PRIVATE -O3)
 
 endif()
 
@@ -42,6 +42,6 @@ if(MPI_FOUND)
     add_executable(${PROJECT_NAME}_mpi src/UCP_mpi.cpp)
     target_include_directories(${PROJECT_NAME}_mpi PRIVATE ${MPI_INCLUDE_PATH})
     target_link_libraries(${PROJECT_NAME}_mpi PRIVATE ${MPI_LIBRARIES})
-    target_compile_options(${PROJECT_NAME}_mpi PRIVATE -O2)
+    target_compile_options(${PROJECT_NAME}_mpi PRIVATE -O3)
 endif()
 
