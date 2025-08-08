@@ -375,15 +375,28 @@ __global__ void checkUCP(SumDataType *d_out, SumDataType Capacity, int N, int P,
     }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    // Default values
+    int N = 10000000;
+    int P = 8;
+
+    if (argc > 1)
+    {
+        N = std::atoi(argv[1]); // Convert first argument
+    }
+
+    if (argc > 2)
+    {
+        P = std::atoi(argv[2]); // Convert second argument
+    }
+
+    printf("N = %d, P = %d\n", N, P);
 
     // 1. Create events
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
-
-    int N = 10000000;
 
     SumDataType *num = new SumDataType[N + 1];
     SumDataType *res = new SumDataType[N + 1];
@@ -416,7 +429,7 @@ int main()
     // cudaMalloc(&d_input, num_items * sizeof(SumDataType));
     // cudaMalloc(&d_output, num_items * sizeof(SumDataType));
 
-#if 1
+#if 0
     // Determine temp storage size for CUB inclusive scan
     void *d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
@@ -446,8 +459,6 @@ int main()
     // for(int i=N-20; i<=N; i++){
     //     printf("%d=%f\n", i, res[i]);
     // }
-
-    int P = 8;
 
     SumDataType Capacity = res[N] / P;
 
