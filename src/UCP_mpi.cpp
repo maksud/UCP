@@ -168,8 +168,8 @@ class UCP
         int b = (end - start + 1) / 2;
         int m = start + b;
 
-        int pMm1 = (int)((C_[m - 1] + Zi_ - 0.0001) / capacity);
-        int pM = (int)((C_[m] + Zi_ - 0.0001) / capacity);
+        int pMm1 = (int)((C_[m - 1] + Zi_ - 0.00001) / capacity);
+        int pM = (int)((C_[m] + Zi_ - 0.00001) / capacity);
 
         if (pMm1 != pM)
         {
@@ -183,8 +183,7 @@ class UCP
 
             for (int k = pMm1 + 1; k < pM; k++)
             {
-                message.fill(m + lowerBound_, (k * capacity - C_[m - 1] - Zi_), ((k + 1) * capacity - C_[m - 1] - Zi_),
-                             C_[m] - C_[m - 1]);
+                message.fill(m + lowerBound_, (k * capacity - C_[m - 1] - Zi_), ((k + 1) * capacity - C_[m - 1] - Zi_), C_[m] - C_[m - 1]);
                 // Send A PJ Message to k
                 // Send C_ Null NJ Message to k
                 MPI_Bsend(&message, 1, mpiTypeBoundaryMessage_, k, 1, MPI_COMM_WORLD);
@@ -194,8 +193,7 @@ class UCP
             if (pM < P_)
             {
                 // Send a Message to Compute the last part of Task: m+lowerBound_ to Processor pMm1
-                message.fill(m + lowerBound_, (pM * capacity - (C_[m - 1] + Zi_)), (C_[m] - C_[m - 1]),
-                             C_[m] - C_[m - 1]);
+                message.fill(m + lowerBound_, (pM * capacity - (C_[m - 1] + Zi_)), (C_[m] - C_[m - 1]), C_[m] - C_[m - 1]);
                 MPI_Bsend(&message, 1, mpiTypeBoundaryMessage_, pM, 2, MPI_COMM_WORLD);
             }
         }
@@ -268,8 +266,7 @@ int main(int argc, char **argv)
     MPI_Get_processor_name(processor_name, &name_len);
 
     // Print a message from each process
-    std::cout << "Hello from processor " << processor_name << ", rank " << world_rank << " out of " << world_size
-              << " processors." << std::endl;
+    std::cout << "Hello from processor " << processor_name << ", rank " << world_rank << " out of " << world_size << " processors." << std::endl;
 
     auto t0 = std::chrono::high_resolution_clock::now();
 
@@ -321,8 +318,7 @@ int main(int argc, char **argv)
 
             totalWorkLoad += eEnd - eStart;
 
-            std::cout << "#1. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd
-                      << std::endl;
+            std::cout << "#1. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
         }
     }
 
@@ -357,8 +353,7 @@ int main(int argc, char **argv)
 
             totalWorkLoad += eEnd - eStart;
 
-            std::cout << "#3. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd
-                      << std::endl;
+            std::cout << "#3. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
         }
     }
 
