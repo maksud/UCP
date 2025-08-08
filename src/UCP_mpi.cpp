@@ -75,7 +75,7 @@ class BoundaryMessage
 
 // Debug Framework
 int NORMAL_WORKLOAD = 1;
-int IMBALANCED_WORKLOAD = 1;
+int IMBALANCED_WORKLOAD = 2;
 int idx_imbalanced = 0;
 
 class UCP
@@ -319,7 +319,7 @@ int main(int argc, char **argv)
     double elapsed_ms = (end - start) * 1000.0; // Convert to milliseconds
 
     if (world_rank == 0)
-        std::cout "Elapsed time = " << elapsed_ms << " ms" << std::endl;
+        std::cout << "Elapsed time = " << elapsed_ms << " ms" << std::endl;
 
     ucp.freeMemory();
 
