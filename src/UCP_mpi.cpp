@@ -11,9 +11,17 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <random>
 #include <sstream>
 #include <utility>
 #include <vector>
+
+// TASK to i
+#define TASK_TO_I(x) (((size_t)(-1 + sqrt(1 + (x - 1) * 8))) / 2)
+// TASK to j
+#define TASK_TO_J(x, i) ((x) - ((i + 1) * (i)) / 2 - 1)
+// i,j to TASK
+#define IJ_TO_TASK(i, j) ((((i) + 1) * (i)) / 2 + 1 + (j))
 
 #define TIMESTEPS 60
 
@@ -117,7 +125,7 @@ class UCP
             upperBound_ = nTasks_ + 1;
         }
 
-        printf("Rank %d - lowerBound_ = %d, upperBound_= %d\n", rank_, lowerBound_, upperBound_);
+        // printf("Rank %d - lowerBound_ = %d, upperBound_= %d\n", rank_, lowerBound_, upperBound_);
 
         size_ = upperBound_ - lowerBound_;
         C_ = new double[size_];
@@ -247,6 +255,85 @@ class UCP
     double Z_;
 };
 
+void readDegDistFile(const std::string &filename, std::vector<double> &degrees, std::vector<double> &counts)
+{
+    std::ifstream infile(filename);
+    if (!infile)
+    {
+        std::cerr << "Failed to open file.\n";
+        return;
+    }
+    std::string line;
+    while (std::getline(infile, line))
+    {
+        std::istringstream iss(line);
+        int key, value;
+        if (!(iss >> key >> value))
+        {
+            continue; // skip malformed lines
+        }
+
+        degrees.push_back(static_cast<double>(key));
+        counts.push_back(static_cast<double>(value));
+    }
+    infile.close();
+}
+
+void readLocationFile(const std::string &filename, std::vector<double> &counts)
+{
+    std::ifstream infile(filename);
+    if (!infile)
+    {
+        std::cerr << "Failed to open file.\n";
+        return;
+    }
+    std::string line;
+    while (std::getline(infile, line))
+    {
+        std::istringstream iss(line);
+        int value;
+        if (!(iss >> value))
+        {
+            continue; // skip malformed lines
+        }
+        counts.push_back(static_cast<double>(value));
+    }
+    infile.close();
+}
+
+double getEdgeCost(size_t locId, const std::vector<double> &degrees, const std::vector<double> &counts, double total)
+{
+    size_t i = locId + 1;
+
+    size_t ix = TASK_TO_I(i);
+    size_t jx = TASK_TO_J(i, ix);
+
+    double c = NORMAL_WORKLOAD;
+
+    int key_i = degrees[ix];
+    int value_i = counts[ix];
+
+    int key_j = degrees[jx];
+    int value_j = counts[jx];
+
+    if (ix == jx)
+    {
+        c = value_i * (value_i + 1) / 2 * ((key_i * key_j) / total);
+    }
+    else
+    {
+        c = value_i * value_j * ((key_i * key_j) / total);
+    }
+
+    return c;
+}
+
+double getLocationCost(size_t locId, const std::vector<double> &counts)
+{
+    double c = 1 + counts[locId] * (counts[locId] - 1) / 2; // Example cost function, can be modified as needed
+    return c;
+}
+
 int main(int argc, char **argv)
 {
 
@@ -257,6 +344,35 @@ int main(int argc, char **argv)
     {
         N = std::atoi(argv[1]); // Convert first argument
     }
+
+    std::vector<double> degrees;
+    std::vector<double> counts;
+
+    double total = 0;
+
+    if (argc > 2)
+    {
+#if 0
+        readDegDistFile(argv[2], degrees, counts);
+        N = degrees.size() * (degrees.size() + 1) / 2;
+        for (int i = 0; i < degrees.size(); ++i)
+        {
+            total += degrees[i] * counts[i];
+        }
+#else
+        readLocationFile(argv[2], counts);
+        N = counts.size();
+
+        std::cout << "N = " << N << std::endl;
+#endif
+    }
+
+    // Fill in Costs using normal distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    double mean = 100.0;  // example mean
+    double stddev = 15.0; // example standard deviation
+    std::normal_distribution<> d(mean, stddev);
 
     // Initialize MPI
     MPI_Init(&argc, &argv);
@@ -289,13 +405,15 @@ int main(int argc, char **argv)
 
     double *C = ucp.C_;
 
-    // Fill in Costs
+#if 0
+
     for (TaskType locId = ucp.lowerBound_; locId < ucp.upperBound_; locId++)
     {
-        double c = NORMAL_WORKLOAD;
+        gen.seed(locId);
+        double c = d(gen);
 
-        if (locId == idx_imbalanced)
-            c = IMBALANCED_WORKLOAD;
+        // if (locId == idx_imbalanced)
+        // c = IMBALANCED_WORKLOAD;
 
         if (locId == ucp.nTasks_)
         {
@@ -311,6 +429,30 @@ int main(int argc, char **argv)
             C[locId - ucp.lowerBound_] = c + C[locId - ucp.lowerBound_ - 1];
         }
     }
+#else
+    for (TaskType locId = ucp.lowerBound_; locId < ucp.upperBound_; locId++)
+    {
+#if 0
+        double c = getEdgeCost(locId, degrees, counts, total);
+#else
+        double c = getLocationCost(locId, counts);
+#endif
+
+        if (locId == ucp.nTasks_)
+        {
+            c = 0;
+        }
+
+        if (locId == ucp.lowerBound_)
+        {
+            C[locId - ucp.lowerBound_] = c;
+        }
+        else
+        {
+            C[locId - ucp.lowerBound_] = c + C[locId - ucp.lowerBound_ - 1];
+        }
+    }
+#endif
 
     ucp.balanceConsecutiveLoads();
 
@@ -350,9 +492,14 @@ int main(int argc, char **argv)
 
         for (int i = ll; i <= hl; i++)
         {
-            int c = NORMAL_WORKLOAD;
-            if (i == idx_imbalanced)
-                c = IMBALANCED_WORKLOAD;
+#if 0
+            
+            gen.seed(i);
+            double c = d(gen);
+#else
+            // double c = getEdgeCost(i + 1, degrees, counts, total);
+            double c = getLocationCost(i, counts);
+#endif
             totalWorkLoad += c;
         }
 
@@ -378,7 +525,7 @@ int main(int argc, char **argv)
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    // std::cout << "FINAL: Rank " << ucp.rank_ << " Work " << totalWorkLoad << std::endl;
+    std::cout << "FINAL: Rank " << ucp.rank_ << " Work " << totalWorkLoad << std::endl;
 
     // Finalize MPI
     MPI_Finalize();
