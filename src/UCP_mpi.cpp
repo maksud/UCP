@@ -274,13 +274,14 @@ int main(int argc, char **argv)
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
-int bufsize = 1024*1024*1024; // Choose a size large enough for your message + overhead
-void* buffer = malloc(bufsize);
-MPI_Buffer_attach(buffer, bufsize);
+    int bufsize = 1024 * 1024 * 1024; // Choose a size large enough for your message + overhead
+    void *buffer = malloc(bufsize);
+    MPI_Buffer_attach(buffer, bufsize);
 
     // Print a message from each process
-    //std::cout << "Hello from processor " << processor_name << ", rank " << world_rank << " out of " << world_size << " processors." << std::endl;
+    // std::cout << "Hello from processor " << processor_name << ", rank " << world_rank << " out of " << world_size << " processors." << std::endl;
 
+    MPI_Barrier(MPI_COMM_WORLD);
     double start = MPI_Wtime(); // Start time
 
     UCP ucp(N);
@@ -312,11 +313,13 @@ MPI_Buffer_attach(buffer, bufsize);
     }
 
     ucp.balanceConsecutiveLoads();
-    double end = MPI_Wtime(); // End time
+
+    MPI_Barrier(MPI_COMM_WORLD);                // Ensure all processes reach this point before printing
+    double end = MPI_Wtime();                   // End time
     double elapsed_ms = (end - start) * 1000.0; // Convert to milliseconds
 
-    std::cout << "Rank " << world_rank << ": Elapsed time = " << elapsed_ms << " ms" << std::endl;
-
+    if (world_rank == 0)
+        std::cout "Elapsed time = " << elapsed_ms << " ms" << std::endl;
 
     ucp.freeMemory();
 
@@ -335,7 +338,7 @@ MPI_Buffer_attach(buffer, bufsize);
 
             totalWorkLoad += eEnd - eStart;
 
-            //std::cout << "#1. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
+            // std::cout << "#1. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
         }
     }
 
@@ -353,7 +356,7 @@ MPI_Buffer_attach(buffer, bufsize);
             totalWorkLoad += c;
         }
 
-        //std::cout << "#2. Rank " << ucp.rank_ << " Task " << ll << " to " << hl << std::endl;
+        // std::cout << "#2. Rank " << ucp.rank_ << " Task " << ll << " to " << hl << std::endl;
     }
 
     // Part 3:
@@ -370,12 +373,12 @@ MPI_Buffer_attach(buffer, bufsize);
 
             totalWorkLoad += eEnd - eStart;
 
-            //std::cout << "#3. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
+            // std::cout << "#3. Rank " << ucp.rank_ << " Task " << x << " SubTask: eStart " << eStart << " eEnd " << eEnd << std::endl;
         }
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    //std::cout << "FINAL: Rank " << ucp.rank_ << " Work " << totalWorkLoad << std::endl;
+    // std::cout << "FINAL: Rank " << ucp.rank_ << " Work " << totalWorkLoad << std::endl;
 
     // Finalize MPI
     MPI_Finalize();
